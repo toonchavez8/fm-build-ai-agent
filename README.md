@@ -21,3 +21,5 @@
 ## Reference Materials
 
 - `references/agents-v2`: Local clone of Hendrixer/agents-v2 for architecture and implementation comparison (kept out of git history). <https://github.com/Hendrixer/agents-v2.git>
+- OpenAI API docs: <https://platform.openai.com/docs/api-reference/introduction>
+- `course-notes`: Live class notes repository: <https://publish.obsidian.md/agents-v2/course>
