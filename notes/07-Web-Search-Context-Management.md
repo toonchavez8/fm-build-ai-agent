@@ -9,6 +9,7 @@ This lesson covers two related topics: giving your agent access to the web, and 
 ### Why Web Search Matters
 
 An LLM's knowledge is frozen at its training cutoff. It doesn't know:
+
 - Today's news
 - Recent package versions
 - Current documentation
@@ -28,12 +29,14 @@ Some model providers have built-in web search capabilities. The model itself can
 **Google Gemini**: Search grounding feature
 
 **Pros:**
+
 - Fast - no extra API calls
 - No additional cost (usually)
 - Tight integration with the model
 - Results are optimized for the model
 
 **Cons:**
+
 - Only works with specific models/providers
 - Less control over search behavior
 - Can't customize search sources
@@ -44,6 +47,7 @@ Some model providers have built-in web search capabilities. The model itself can
 You implement search as a tool the agent can call. The tool hits a search API (Google, Bing, Exa, Tavily, etc.) and returns results.
 
 **Pros:**
+
 - Works with any model that supports tool calling
 - Full control over search parameters
 - Can use specialized search APIs
@@ -51,6 +55,7 @@ You implement search as a tool the agent can call. The tool hits a search API (G
 - Model-agnostic
 
 **Cons:**
+
 - Additional API costs
 - Extra latency (tool call round trip)
 - You handle result formatting
@@ -85,6 +90,7 @@ This is why agents need the loop we built - search isn't a single request/respon
 Tokens are the fundamental units LLMs work with. They're not quite words, not quite characters - they're chunks of text the model was trained to recognize.
 
 **Examples:**
+
 - "hello" → 1 token
 - "indistinguishable" → 4 tokens ("ind", "ist", "ingu", "ishable")
 - Common words → usually 1 token
@@ -96,6 +102,7 @@ Tokens are the fundamental units LLMs work with. They're not quite words, not qu
 ### Input vs Output Tokens
 
 **Input tokens**: Everything you send to the model
+
 - System prompt
 - Conversation history
 - Tool definitions
@@ -103,6 +110,7 @@ Tokens are the fundamental units LLMs work with. They're not quite words, not qu
 - Tool results
 
 **Output tokens**: Everything the model generates
+
 - Response text
 - Tool calls
 - Reasoning (if using chain-of-thought)
@@ -114,11 +122,13 @@ Both count against limits. Both cost money. Output tokens typically cost 3-4x mo
 The context window is the maximum number of tokens a model can process in a single request. It includes both input and output.
 
 **Current limits (2025):**
+
 - GPT-4o: 128K tokens
 - Claude 3.5 Sonnet: 200K tokens
 - Gemini 1.5 Pro: 2M tokens
 
 Sounds like a lot, right? Let's do math:
+
 - Average code file: ~500 tokens
 - A single web search result: ~1000-3000 tokens
 - Conversation history after 10 exchanges: ~5000 tokens
@@ -135,6 +145,7 @@ The constraint is architectural - it comes from how transformers work.
 Transformers use "self-attention" to understand relationships between tokens. Every token attends to every other token. This is powerful but expensive.
 
 **The math**: Attention scales quadratically - O(n²) with sequence length.
+
 - 1K tokens: 1 million attention calculations
 - 10K tokens: 100 million calculations
 - 100K tokens: 10 billion calculations
@@ -144,6 +155,7 @@ Memory and compute explode as context grows.
 #### Training Data Distribution
 
 Models are trained on sequences of a certain length. Performance degrades on sequences longer than training data. You can train on longer sequences, but:
+
 - Requires more memory
 - Takes longer
 - Costs more
@@ -152,6 +164,7 @@ Models are trained on sequences of a certain length. Performance degrades on seq
 #### The "Lost in the Middle" Problem
 
 Research shows models have U-shaped recall: they remember the beginning and end of context well, but struggle with the middle. This is due to:
+
 - Positional encoding limitations
 - Attention naturally focusing on boundaries
 - Training data patterns
@@ -165,11 +178,13 @@ Even if you *can* fit 100K tokens, the model may not use them effectively.
 When context gets too large, summarize the conversation so far. Replace detailed history with a condensed summary.
 
 **Pros:**
+
 - Preserves key information
 - Conversation can continue indefinitely
 - Graceful degradation
 
 **Cons:**
+
 - Loses detail
 - Summarization costs tokens
 - May lose important nuance
@@ -179,11 +194,13 @@ When context gets too large, summarize the conversation so far. Replace detailed
 Drop old messages when you hit the limit. Keep only the most recent N messages.
 
 **Pros:**
+
 - Simple to implement
 - No summarization cost
 - Predictable behavior
 
 **Cons:**
+
 - Loses all old context
 - Agent "forgets" earlier conversation
 - Can break multi-step tasks
@@ -193,11 +210,13 @@ Drop old messages when you hit the limit. Keep only the most recent N messages.
 Spawn child agents for specific tasks. Each gets its own fresh context window.
 
 **Pros:**
+
 - Clean separation of concerns
 - Each task gets full context budget
 - Parent only sees results, not details
 
 **Cons:**
+
 - Coordination overhead
 - Results must be summarized anyway
 - More complex architecture
@@ -207,11 +226,13 @@ Spawn child agents for specific tasks. Each gets its own fresh context window.
 Store conversation history externally. Retrieve relevant parts on demand.
 
 **Pros:**
+
 - Scales to infinite history
 - Only retrieves what's relevant
 - Can search across conversations
 
 **Cons:**
+
 - Requires vector database
 - Retrieval may miss important context
 - Added infrastructure
@@ -221,11 +242,13 @@ Store conversation history externally. Retrieve relevant parts on demand.
 Just start a new conversation. Export/import key facts manually.
 
 **Pros:**
+
 - Dead simple
 - Clean slate
 - No accumulated confusion
 
 **Cons:**
+
 - User experience disruption
 - Manual context transfer
 - Loses conversation flow
@@ -233,6 +256,7 @@ Just start a new conversation. Export/import key facts manually.
 #### 6. Prevent Bloat in the First Place
 
 Design tools and prompts to minimize token usage:
+
 - Truncate long tool results
 - Format responses efficiently
 - Only include necessary context
@@ -243,6 +267,7 @@ This is often the best first line of defense.
 ## How We Implement It
 
 We use a simple compaction strategy:
+
 1. Estimate token usage before each turn
 2. If over threshold (80% of context window), trigger compaction
 3. Summarize conversation history into a condensed form
@@ -389,6 +414,7 @@ export async function compactConversation(
 ```
 
 Key implementation details:
+
 - System messages are filtered out (they're added fresh each turn)
 - Conversation is converted to plain text for summarization
 - Result is a two-message "seed" that primes the conversation to continue
@@ -453,6 +479,7 @@ reportTokenUsage();
 ```
 
 Call `reportTokenUsage()` after each significant change to messages:
+
 - After adding response messages
 - After adding tool results
 
@@ -471,6 +498,7 @@ This happens *before* the turn starts, so the agent always has room to work.
 ### Why 80%?
 
 We need headroom for:
+
 - The new user message
 - Tool calls and results
 - The assistant's response
@@ -481,11 +509,13 @@ We need headroom for:
 ### Trade-offs
 
 **What we preserve:**
+
 - Overall goals and intent
 - Key decisions made
 - Important facts mentioned
 
 **What we lose:**
+
 - Exact wording
 - Detailed tool outputs
 - Step-by-step reasoning

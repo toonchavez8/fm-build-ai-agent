@@ -29,8 +29,6 @@ You'll build a generic agent that can orchestrate tools on your machine: reading
 - An API key for at least one modern LLM provider
 - Basic familiarity with the command line is helpful but not required
 
-
-
 ## Table of Contents
 
 - [[01-Intro-to-Agents]]

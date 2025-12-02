@@ -9,6 +9,7 @@ File system access is one of the most powerful capabilities you can give an agen
 ### The Obvious Uses
 
 The straightforward use cases are what you'd expect:
+
 - **Reading source code** to understand a codebase
 - **Writing code files** when implementing features
 - **Reading configuration** (package.json, .env, etc.)
@@ -22,6 +23,7 @@ These alone make an agent useful. But files unlock much more.
 LLMs are stateless. Every request is independent - the model has no memory between calls. Conversation history is just text we re-send each time.
 
 Files change this. An agent with file access can:
+
 - Write notes to remember later
 - Store findings from research
 - Keep track of what it's already tried
@@ -44,6 +46,7 @@ This is persistent memory. The agent can read this file next session and pick up
 ### Files as State
 
 Complex tasks require tracking state:
+
 - What step are we on?
 - What's been completed?
 - What's pending?
@@ -68,6 +71,7 @@ The agent writes this file, reads it later, updates it as work progresses. State
 ### Files as a Scratch Pad
 
 Sometimes agents need to "think out loud" with more space than the context window allows:
+
 - Dump a large API response to analyze piece by piece
 - Write intermediate calculations
 - Store data transformations step by step
@@ -86,6 +90,7 @@ The file system becomes external working memory. The agent processes data in chu
 ### Files as Context Loading
 
 Related to the scratch pad - agents can strategically load context:
+
 - Read only the relevant portions of large files
 - Maintain an index of what's where
 - Load context on-demand rather than all at once
@@ -95,6 +100,7 @@ Claude Code and similar tools do this constantly. They don't load entire codebas
 ### Files as Inter-Agent Communication
 
 When you have multiple agents or processes:
+
 - Agent A writes results to a file
 - Agent B reads that file as input
 - No direct communication needed
@@ -104,6 +110,7 @@ This is simple, reliable, and debuggable. You can inspect the intermediate files
 ### Files as Audit Trail
 
 Everything the agent does can be logged:
+
 - Commands executed
 - Decisions made
 - Errors encountered
@@ -126,6 +133,7 @@ This matters for debugging, compliance, and building trust with users.
 ### Files as Tool Output Storage
 
 Some operations produce large outputs:
+
 - Compilation results
 - Test output
 - Search results
@@ -136,6 +144,7 @@ Rather than stuffing these into context, write them to files. The agent can refe
 ### Files as Configuration
 
 Agents can read and modify their own behavior:
+
 - Read a config file to understand preferences
 - Update settings based on user feedback
 - Store learned patterns for future use
@@ -145,15 +154,19 @@ Agents can read and modify their own behavior:
 For most agent use cases, you need four file operations:
 
 ### 1. Read
+
 Essential for understanding anything. Can't modify what you can't see.
 
 ### 2. Write
+
 Creates new files or overwrites existing ones. The primary way agents produce output.
 
 ### 3. List
+
 Navigate the file system. Discover what's available. Essential for exploration.
 
 ### 4. Delete
+
 Clean up temporary files. Remove outdated content. Reset state.
 
 Some implementations add more (copy, move, append, search), but these four cover most needs.
@@ -163,11 +176,13 @@ Some implementations add more (copy, move, append, search), but these four cover
 ### Path Handling
 
 Agents will try creative paths:
+
 - Relative paths: `./src/index.ts`
 - Absolute paths: `/Users/scott/project/src/index.ts`
 - Parent traversal: `../other-project/secrets.txt` (dangerous!)
 
 Decide your policy:
+
 - Allow any path? (dangerous but flexible)
 - Restrict to working directory? (safer)
 - Allowlist specific directories? (most secure)
@@ -175,6 +190,7 @@ Decide your policy:
 ### Error Handling
 
 File operations fail often:
+
 - File not found
 - Permission denied
 - Disk full
@@ -186,6 +202,7 @@ Return clear error messages. The agent needs to understand what went wrong to tr
 ### Directory Creation
 
 When writing files, the parent directory might not exist:
+
 - `/new-folder/file.txt` fails if `new-folder/` doesn't exist
 
 Most implementations auto-create parent directories with `mkdir -p` semantics. This reduces friction.
@@ -193,11 +210,13 @@ Most implementations auto-create parent directories with `mkdir -p` semantics. T
 ### Large Files
 
 What happens when an agent tries to read a 10MB log file?
+
 - Eats all context tokens
 - May exceed model limits
 - Slows everything down
 
 Options:
+
 - Truncate to first N lines/bytes
 - Return an error suggesting specific line ranges
 - Summarize large files automatically
@@ -205,6 +224,7 @@ Options:
 ### Binary Files
 
 Images, PDFs, compiled code - not everything is text. Decide:
+
 - Reject binary files with clear error
 - Return base64 (expensive, often useless)
 - Return metadata only (file type, size, etc.)
@@ -336,22 +356,26 @@ export const deleteFile = tool({
 Key implementation details:
 
 **readFile:**
+
 - Uses Node.js `fs.promises` for async file operations
 - Returns file content directly as string
 - Handles `ENOENT` (file not found) with clear error message
 - Generic error fallback for other issues
 
 **writeFile:**
+
 - Auto-creates parent directories with `mkdir({ recursive: true })`
 - Reports bytes written for confirmation
 - Overwrites existing files (no append mode)
 
 **listFiles:**
+
 - Uses `withFileTypes: true` to distinguish files from directories
 - Prefixes entries with `[dir]` or `[file]` for clarity
 - Handles empty directories gracefully
 
 **deleteFile:**
+
 - Uses `unlink` (removes file, not directory)
 - Clear error if file doesn't exist
 - Description warns about irreversibility
@@ -390,12 +414,14 @@ We group file tools for easy selective use in evaluations. Sometimes you want to
 ### Why Separate Tools vs One "File" Tool?
 
 We could have one tool with an `operation` parameter:
+
 ```typescript
 file({ operation: "read", path: "foo.txt" })
 file({ operation: "write", path: "foo.txt", content: "..." })
 ```
 
 We chose separate tools because:
+
 - **Clearer intent**: Model knows exactly what each tool does
 - **Better descriptions**: Each tool has focused documentation
 - **Simpler schemas**: Each tool has only relevant parameters
@@ -406,6 +432,7 @@ We chose separate tools because:
 Notice we return error messages like `"Error: File not found"` rather than throwing exceptions.
 
 The agent needs to handle errors gracefully. If we throw, the agent loop might crash or behave unexpectedly. By returning error strings:
+
 - Agent sees the error in tool output
 - Agent can decide how to proceed (try different path, ask user, give up)
 - No special error handling needed in the loop

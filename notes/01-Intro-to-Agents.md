@@ -30,11 +30,13 @@ The common thread: **the LLM is in the driver's seat**, deciding what actions to
 ## Why Agents?
 
 LLMs alone are limited to:
+
 - Knowledge from training data (stale, incomplete)
 - Single-turn responses (no persistence)
 - Text generation (no real-world impact)
 
 Agents can:
+
 - Access live data (APIs, databases, web)
 - Work through multi-step problems
 - Actually DO things (create files, send emails, deploy code)
@@ -119,6 +121,7 @@ export async function runAgent(
 ```
 
 This is the simplest possible "agent" - really just an LLM call. It's not a true agent yet because:
+
 - No tools (can't take actions)
 - No loop (responds once and stops)
 - No memory (doesn't use conversation history)

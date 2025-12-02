@@ -9,6 +9,7 @@ Single-turn evals test tool selection - did the model pick the right tool? Multi
 Single-turn evals answer: "Given this prompt, does the model call the right tool?"
 
 But agents don't work in single turns. They:
+
 1. Receive a task
 2. Call a tool
 3. Process the result
@@ -19,6 +20,7 @@ But agents don't work in single turns. They:
 Multi-turn evals answer: "Given this task, does the agent complete it correctly?"
 
 This catches failures that single-turn evals miss:
+
 - Agent picks right first tool but wrong second tool
 - Agent gets stuck in loops
 - Agent misinterprets tool results
@@ -30,6 +32,7 @@ This catches failures that single-turn evals miss:
 Single-turn evals can be fairly deterministic - did the model call `readFile` or not?
 
 Multi-turn evals are messy:
+
 - The agent might take different valid paths to the same goal
 - Tool call order might vary but still be correct
 - Final response wording varies every run
@@ -42,6 +45,7 @@ How do you evaluate something when the "right answer" isn't a fixed string?
 The solution: use another LLM to evaluate the output.
 
 Instead of checking `output === expected`, we ask a judge model:
+
 - "Given this task and these tool results, is this response correct?"
 - "Does this answer make sense?"
 - "Did the agent accomplish the goal?"
@@ -69,6 +73,7 @@ Instead of checking `output === expected`, we ask a judge model:
 ### Making LLM-as-Judge More Reliable
 
 **Use structured output**: Don't ask for free-form evaluation. Use a schema:
+
 ```typescript
 const judgeSchema = z.object({
   score: z.number().min(1).max(10),
@@ -79,6 +84,7 @@ const judgeSchema = z.object({
 **Use a stronger model**: The judge should be at least as capable as the agent being evaluated. We use a reasoning model with high effort.
 
 **Clear criteria**: Define exactly what 1-10 means:
+
 - 10: Fully addresses the task using tool results correctly
 - 7-9: Mostly correct with minor issues
 - 4-6: Partially addresses the task
@@ -101,6 +107,7 @@ The hardest part of multi-turn evals is designing the test data.
 ### Input Strategies
 
 **Fresh task**: Just a user prompt. Agent starts from scratch.
+
 ```json
 {
   "prompt": "Read the config file and tell me the database host"
@@ -108,6 +115,7 @@ The hardest part of multi-turn evals is designing the test data.
 ```
 
 **Mid-conversation**: Pre-filled message history. Test continuation.
+
 ```json
 {
   "messages": [
@@ -121,6 +129,7 @@ The hardest part of multi-turn evals is designing the test data.
 ### Mock Tool Results
 
 For deterministic testing, tools return fixed values:
+
 ```json
 {
   "mockTools": {
@@ -137,6 +146,7 @@ For deterministic testing, tools return fixed values:
 ```
 
 The agent sees real tool schemas but gets canned responses. This:
+
 - Makes tests reproducible
 - Avoids file system side effects
 - Lets you test edge cases (what if file not found?)
@@ -147,6 +157,7 @@ The agent sees real tool schemas but gets canned responses. This:
 You can check multiple things:
 
 **Tool order**: Did tools get called in the right sequence?
+
 ```json
 {
   "expectedToolOrder": ["readFile", "writeFile"]
@@ -154,6 +165,7 @@ You can check multiple things:
 ```
 
 **Forbidden tools**: Were certain tools avoided?
+
 ```json
 {
   "forbiddenTools": ["deleteFile", "runCommand"]
@@ -161,6 +173,7 @@ You can check multiple things:
 ```
 
 **Output quality**: Does the response make sense? (LLM judge)
+
 ```json
 {
   "originalTask": "Read config and report the database host",
@@ -245,6 +258,7 @@ Evaluate if this response correctly uses the tool results to answer the task.`,
 ```
 
 Key implementation details:
+
 - Uses `generateObject` for structured output (guaranteed schema)
 - 1-10 scale converted to 0-1 for consistency with other evaluators
 - High reasoning effort for better judgment
@@ -316,6 +330,7 @@ export async function multiTurnWithMocks(
 ```
 
 Key implementation details:
+
 - Uses `buildMockedTools` to create tools with fixed return values
 - Supports both fresh prompts and pre-filled message history
 - `stopWhen: stepCountIs(20)` prevents infinite loops
@@ -390,6 +405,7 @@ evaluate({
 ```
 
 Key implementation details:
+
 - Three evaluators run on each test case
 - Evaluators return 1 (pass) if no target to check against
 - `toolOrder` checks sequence, `toolsAvoided` checks forbidden tools, `outputQuality` uses LLM judge

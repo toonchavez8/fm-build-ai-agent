@@ -28,11 +28,13 @@ The model NEVER executes tools itself. It only generates a structured request sa
 ## Why Tools Matter for Agents
 
 Without tools, an LLM can only:
+
 - Answer from its training data
 - Generate text
 - Reason about information in the prompt
 
 With tools, an LLM can:
+
 - Read and write files
 - Search the web
 - Execute code
@@ -163,4 +165,3 @@ export async function runAgent(
 2. **Good descriptions matter** - The model relies on your description to select the right tool
 3. **Schema validation** - Zod schemas ensure the model generates valid arguments
 4. **You control execution** - The model requests, you execute. This is a security boundary.
-

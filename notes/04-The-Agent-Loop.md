@@ -17,6 +17,7 @@ User → LLM → Response
 One input, one output. The model generates text based on a prompt. No tools, no iteration, no action. This is ChatGPT in its simplest form.
 
 **Characteristics:**
+
 - Stateless (no memory between calls)
 - No external actions
 - Single generation
@@ -33,6 +34,7 @@ User → Step 1 → Step 2 → Step 3 → Response
 A predefined sequence of steps. You decide the order. Each step might involve an LLM call or a tool, but the flow is fixed. Think: "first summarize, then translate, then format."
 
 **Characteristics:**
+
 - Deterministic flow
 - Human-designed sequence
 - LLM doesn't choose what happens next
@@ -49,6 +51,7 @@ User → Agent Loop ←→ Tools
 The LLM decides what to do. It can call tools, observe results, and choose the next action. The loop continues until the agent decides it's done.
 
 **Characteristics:**
+
 - LLM controls the flow
 - Dynamic tool selection
 - Iterative refinement
@@ -59,18 +62,23 @@ The LLM decides what to do. It can call tools, observe results, and choose the n
 Agency isn't binary. There's a spectrum:
 
 ### No Agency (Pure LLM)
+
 Model generates text. That's it. No tools, no actions.
 
 ### Low Agency (Single Tool Call)
+
 Model can call ONE tool, then responds. No iteration. Like: "Call the weather API and tell me the result."
 
 ### Medium Agency (Fixed Iterations)
+
 Model can call tools, but you cap the iterations. "Do up to 3 tool calls, then respond." Prevents infinite loops but limits complex tasks.
 
 ### High Agency (Full Loop)
+
 Model loops until it decides to stop. It can call as many tools as needed, in whatever order, until the task is complete.
 
 ### Full Autonomy (Multi-Agent)
+
 Multiple agents coordinate. Agents spawn sub-agents. Human only intervenes for approvals. This is where things get interesting (and risky).
 
 ## Why Build Agents?
@@ -78,6 +86,7 @@ Multiple agents coordinate. Agents spawn sub-agents. Human only intervenes for a
 ### Tasks Require Multiple Steps
 
 "Read the config file and update the port" requires:
+
 1. Read the file
 2. Parse the content
 3. Modify the value
@@ -88,6 +97,7 @@ A single LLM call can't do this. It can only tell you what to do.
 ### Information Gathering is Iterative
 
 "Find all files that import the auth module" might require:
+
 1. List files in src/
 2. Check each file for imports
 3. Some files import from other files that import auth
@@ -159,6 +169,7 @@ The model simply responds with text and no tool calls. It decided the task is do
 ### Finish Reason
 
 The AI SDK provides `finishReason`:
+
 - `"stop"` - Model finished normally
 - `"tool-calls"` - Model wants to call tools
 - `"length"` - Hit token limit
@@ -396,6 +407,7 @@ for await (const chunk of result.fullStream) {
 ```
 
 As chunks arrive:
+
 - Text deltas go to the UI immediately
 - Tool calls are collected for execution
 
@@ -474,16 +486,21 @@ This keeps the loop pure - it doesn't know about React or Ink or any UI framewor
 ## Common Pitfalls
 
 ### Infinite Loops
+
 Model keeps calling tools forever. Always have a max iteration limit.
 
 ### Lost Tool Results
+
 Forgetting to add tool results to messages. The model won't see them and will be confused.
 
 ### Wrong Message Order
+
 Messages must be in order: user → assistant → tool → assistant → ... Models expect this structure.
 
 ### Not Handling Errors
+
 Tool execution can fail. Catch errors and add them as tool results so the model can adapt.
 
 ### Blocking UI
+
 Long tool executions without streaming feedback. Users think it's frozen.

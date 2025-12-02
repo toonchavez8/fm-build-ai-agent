@@ -18,6 +18,7 @@ Without evals, you're flying blind. You might think your agent is working great 
 ## Offline vs Online Evals
 
 ### Offline Evals
+
 - Run against a **fixed dataset** before deployment
 - Test specific scenarios you've curated
 - Fast feedback loop during development
@@ -25,6 +26,7 @@ Without evals, you're flying blind. You might think your agent is working great 
 - **This is what we're building today**
 
 ### Online Evals
+
 - Run in **production** against real user traffic
 - Catch issues that your test cases didn't anticipate
 - Use sampling to evaluate a percentage of requests
@@ -56,7 +58,9 @@ This is how you systematically improve agents without relying on vibes. Every ch
 ## Key Concepts
 
 ### Single-Turn Evals
+
 Single-turn evals test **one interaction** - a user message and the agent's immediate response. They're perfect for testing:
+
 - **Tool selection** - Did the agent pick the right tool(s)?
 - **Parameter extraction** - Did it extract the correct arguments?
 - **Refusal behavior** - Did it correctly NOT use tools when inappropriate?
@@ -84,6 +88,7 @@ Scorers are functions that take the agent's output and the expected target, retu
 ### Why Tracing Matters
 
 When your agent makes a decision, you need to understand:
+
 - What context did it have?
 - What tools did it consider?
 - Why did it pick that tool?
@@ -97,11 +102,13 @@ OTEL (OpenTelemetry) tracing gives you this visibility with hierarchical spans s
 2. Create a new project
 3. Copy your API key
 4. Add to your `.env` file:
+
    ```
    LMNR_API_KEY=your_api_key_here
    ```
 
 Laminar provides:
+
 - Trace visualization
 - Eval execution and tracking
 - Score aggregation over time
@@ -670,4 +677,3 @@ npx tsx evals/shell-tools.eval.ts
 ```
 
 Results will be visible in your Laminar dashboard with scores per evaluator and aggregated metrics.
-
