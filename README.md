@@ -13,3 +13,11 @@
 4. Run sanity checks: `npm run lint && npm test`.
 
 ## Agenda Draft
+
+- Day 1: Project goals, tooling overview, environment prep.
+- Day 2: Core agent loop, prompt pipelines.
+- Day 3: Tool integrations, evaluation, deployment.
+
+## Reference Materials
+
+- `references/agents-v2`: Local clone of Hendrixer/agents-v2 for architecture and implementation comparison (kept out of git history). <https://github.com/Hendrixer/agents-v2.git>
